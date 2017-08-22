@@ -34,7 +34,7 @@ def read_data(**kwargs):
         skip += nrows
         ctr += 1
         if verbose:
-            print('\rrows read: {}'.format(skip))
+            print('\rrows read: {}'.format(skip), end='')
     return data
 
 
@@ -63,6 +63,68 @@ def getUniqueLonLat(lonLatPairs):
     else:
         raise Exception('Could not parse type for lonLatPairs')
     return (unique_lon, unique_lat)
+
+
+def _near_equal(x, vec, condition='equality'):
+    """
+    _near_equal(x, vec, condition='equality') is a fancy generator that
+    returns a list of tuples (j, vec[j]) corresponding to values of
+    vec that are "near equal" to x. Note that one imposes exact
+    equality by passing condition='equality'; or imposes a
+    near-equality with tolerance th by passing condition=th. Custom
+    functions mapping (number, vector, index) -> bool are also
+    accepted.
+    """
+    if isinstance(condition, str) and (condition.lower()[0] == 'e'):
+        # equality case
+        cond = lambda y, v, k: (y == v[k])
+    elif isinstance(condition, float):
+        cond = lambda y, v, k: (np.abs(y - v[k]) <= condition)
+    elif callable(condition):
+        # should return bool
+        cond = condition
+    return np.fromiter((vec[j] for j in range(vec.size) 
+                        if cond(x,vec,j)), dtype=np.float)
+
+
+def _near_equal_pairs(lon, lat, lon_vec, lat_vec, th):
+    npnorm = np.linalg.norm
+    arr = [[x,y]
+           for x in lon_vec
+           for y in lat_vec
+           if (npnorm([x-lon, y-lat])<th)]
+    arr = np.array(arr)
+    return arr
+
+
+def near_equal(lon, lat, lon_vec, lat_vec, th):
+    lon_ne = _near_equal(lon, lon_vec, th)
+    lat_ne = _near_equal(lat, lat_vec, th)
+    return _near_equal_pairs(lon, lat, lon_ne, lat_ne, th)
+
+
+# Next up is to write the getNeighbours function that will get neighbours for each point.
+# def _getNeighbours(lon, lat, lon_vec, lat_vec, th=None):
+#     """
+#     _getNeigbours(lon, lat, lon_vec, lat_vec) returns a list of 
+#     the neighbouring latitudes and longitudes of (lon, lat), 
+#     from the array (lon_vec, lat_vec), as determined by the
+#     threshold radius th. 
+#     """
+#     nlon = lon_vec.size
+#     nlat = lat_vec.size
+#     if (th is None) and (nlon < 10000) and (nlat < 10000):
+#         # this could be expensive to compute...
+#         dlon = (lon_vec[1:] - lon_vec[:-1]).mean()
+#         dlat = (lat_vec[1:] - lat_vec[:-1]).mean()
+#         th = 3 * np.sqrt(dlon**2 + dlat**2)
+#     elif th is None:
+#         dlon = lon_vec[1] - lon_vec[0]
+#         dlat = lat_vec[1] - lat_vec[0]
+#         th = 3 * np.sqrt(dlon**2 + dlat**2)
+
+#     return nbrs
+
 
 
 def smallestDiff(vec, random=False, patience=1000):
