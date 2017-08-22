@@ -1,4 +1,15 @@
 def read_data(**kwargs):
+    """
+    read_data(**kwargs) reads the point cloud data for the Smart Shores project.
+    
+    Input
+    column_names : (default: ['lon', 'lat', 'z', 'r', 'g', 'b', 'j', 'k', 'l']
+    max_rows : (default: 15 000 000)
+    nrows : (default: 500 000)
+    skip : (default: 0)
+    verbose : (default: False)
+    fp : (default: '~/data/4-Vadeboncoeur/davis-bay.txt'
+    """
     from pandas import read_csv as _csv
     total_rows = 57891462
     column_names = kwargs.get('column_names',
