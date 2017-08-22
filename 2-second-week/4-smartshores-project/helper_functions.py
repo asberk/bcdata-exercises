@@ -1,3 +1,7 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
 def read_data(**kwargs):
     """
     read_data(**kwargs) reads the point cloud data for the Smart Shores project.
