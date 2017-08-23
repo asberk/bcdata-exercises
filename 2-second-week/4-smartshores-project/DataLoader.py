@@ -8,13 +8,18 @@ class DataLoader:
     """
     def __init__(self, **kwargs):
         """
-        self.data : the dictionary in which the data is stored.
-        self.max_rows : store no more than max_rows 
-                        in the data dictionary at any given time.
+        Optional keyword arguments
+        max_rows : store no more than max_rows in the data dictionary
+                   at any given time.
         self.nrows : the number of rows to read in to each key of
                      the data dictionary.
+
+        Attributes
+        TOTAL_ROWS : 57891462 is the total number of rows in the data 
+                     file we were given. If this changes then this value
+                     must be changed manually. 
+        data : the dictionary in which the data is stored.
         """
-        self.TOTAL_ROWS = 57891462
         self.columns = kwargs.get('column_names',
                                   ['lon', 'lat', 'z', 'r',
                                    'g', 'b', 'j', 'k', 'l'])
@@ -24,14 +29,23 @@ class DataLoader:
         self.verbose = kwargs.get('verbose', False)
         self.fp = kwargs.get('filepath', 
                              '~/data/4-Vadeboncoeur/davis-bay.txt')
+        self._total_rows()
         self.data = None
         self.group_number = 0
-        
-        
+        return
+
+
+    def _total_rows(self):
+        with open(self.fp) as fprot:
+            self.TOTAL_ROWS = len(list(fprot))
+        return
+
+    
     def readData(self):
         """
-        read_data() reads the point cloud data for the
+        readData(self) reads the point cloud data for the
         Smart Shores project.
+        Each time it is called, it loads the next batch of point cloud data.
         """
         from pandas import read_csv as _csv
         self.skip += self.group_number * self.max_rows
@@ -63,7 +77,7 @@ class DataLoader:
         getLonLatPairs(self, concat=True) returns an array or 
         dict of arrays with the lon-lat pairs from data. 
         """
-        pairs = {k: _getLonLatPairs(v)
+        pairs = {k: self._getLonLatPairs(v)
                  for k, v in self.data.items()}
         if concat:
             pairs = np.vstack(pairs.values())
@@ -71,6 +85,11 @@ class DataLoader:
 
 
     def uniqueLonLatPairs(self, concat=True):
+        """
+        uniqueLonLatPairs(self, concat=True)
+        return an array or dict of arrays whose rows contain 
+        unique pairs (lon, lat). 
+        """
         pairs = {k: np.unique(_getLonLatPairs(v), axis=0)
                  for k, v in self.data.items()}
         if concat:
