@@ -223,7 +223,7 @@ def hist3d(arr, **kwargs):
     cmap = kwargs.get('cmap', 'viridis')
     s = kwargs.get('s', 3)
 
-    H, edges = np.histogramdd(angles, bins=nbins)
+    H, edges = np.histogramdd(arr, bins=nbins)
     edges = np.vstack(edges).T
     edges = .5 * (edges[1:,:] + edges[:-1,:])
     edges.shape
