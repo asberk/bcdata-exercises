@@ -113,4 +113,13 @@ class DataLoader:
         lon_unique = np.unique(np.concatenate(lon_unique))
         lat_unique = np.unique(np.concatenate(lat_unique))
         return (lon_unique, lat_unique)
-        
+
+    def getRgbArray(self, batch):
+        return self.data[batch].loc[:, ['r', 'g', 'b']].values
+
+    def getScaledRgbArray(self, batch):
+        rgb = self.getRgbArray(batch)
+        rgb /= 255
+        from sklearn.preprocessing import StandardScaler
+        scaler = StandardScaler()
+        return scaler.fit_transform(rgb)
