@@ -36,6 +36,9 @@ class DataLoader:
         self.readDir = kwargs.get('readDir',
                                   '/home/asberk/data/4-Vadeboncoeur/')
         self.fp = self.readDir + self.fileName
+        self.include_angles = kwargs.get('include_angles', False)
+        if not self.include_angles:
+            self.columns = self.columns[:-3]
         print('Counting total rows...', end='')
         self._total_rows()
         print(self.TOTAL_ROWS)
@@ -61,10 +64,15 @@ class DataLoader:
         self.skip += self.group_number * self.max_rows
         data = {}
         ctr = 0
+        if self.include_angles:
+            # whether to exclude the angle columns
+            usecols = [0,1,2,3,4,5,6,7,8]
+        else:
+            usecols = [0,1,2,3,4,5]
         while ctr*self.nrows < np.min([self.TOTAL_ROWS, self.max_rows]):
             data[ctr] = _csv(self.fp, sep=" ", header=None, 
                              skiprows=self.skip + ctr*self.nrows,
-                             nrows=self.nrows)
+                             nrows=self.nrows, usecols=usecols)
             data[ctr].columns = self.columns
             ctr += 1
             if self.verbose:
