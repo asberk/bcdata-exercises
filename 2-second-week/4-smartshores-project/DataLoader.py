@@ -114,12 +114,28 @@ class DataLoader:
         lat_unique = np.unique(np.concatenate(lat_unique))
         return (lon_unique, lat_unique)
 
-    def getRgbArray(self, batch):
+
+    def _getRgbArray(self, batch):
         return self.data[batch].loc[:, ['r', 'g', 'b']].values
 
-    def getScaledRgbArray(self, batch):
-        rgb = self.getRgbArray(batch)
-        rgb /= 255
+
+    def getRgbArray(self, concat=True):
+        """
+        Return the array of rgb values
+        """
+        rgb = {k: _getRgbArray(k) for k in self.data.keys()}
+        if concat:
+            rgb = np.vstack(_rgb.values())
+        return rgb
+
+
+    def getScaledRgbArray(self):
+        """
+        For the current group, return the 
+        np.ndarray of normalized rgb values.
+        (normalization done using StandardScaler)
+        """
         from sklearn.preprocessing import StandardScaler
+        rgb = self.getRgbArray() / 255
         scaler = StandardScaler()
         return scaler.fit_transform(rgb)
