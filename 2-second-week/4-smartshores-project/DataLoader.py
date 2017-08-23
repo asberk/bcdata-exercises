@@ -123,7 +123,7 @@ class DataLoader:
         """
         Return the array of rgb values
         """
-        rgb = {k: _getRgbArray(k) for k in self.data.keys()}
+        rgb = {k: self._getRgbArray(k) for k in self.data.keys()}
         if concat:
             rgb = np.vstack(_rgb.values())
         return rgb
