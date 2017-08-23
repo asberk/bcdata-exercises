@@ -27,9 +27,10 @@ class DataLoader:
         self.nrows = kwargs.get('nrows', int(5 * 1e5))
         self.skip = kwargs.get('skip', 0)
         self.verbose = kwargs.get('verbose', False)
-        self.fp = kwargs.get('filepath', 
-                             '~/data/4-Vadeboncoeur/davis-bay.txt')
+        self.fp = kwargs.get('filepath', None)
+        print('Counting total rows...', end='')
         self._total_rows()
+        print(self.TOTAL_ROWS)
         self.data = None
         self.group_number = 0
         return
