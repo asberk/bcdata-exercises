@@ -182,8 +182,14 @@ class DataLoader:
         end_idx = (batch_number + 1) * batch_size
 
         if self.lonlat_unique is None:
+            print('getting unique lon-lat pairs...', end='')
             self.lonlat_unique = self.uniqueLonLatPairs()
-            llu = self.lonlat_unique
+            print('done.')
+
+        if self.neigh is None:
+            print('building neighbours tree...', end='')
+            self.nn()
+            print('done.')
         
         while end_idx < self.lonlat_unique.shape[0]-1:
             fileName = savedir + 'radNeigh_lonlatUnique_{}_{}.npy'
