@@ -48,6 +48,7 @@ class DataLoader:
         Smart Shores project.
         Each time it is called, it loads the next batch of point cloud data.
         """
+        print('Loading group {}'.format(self.group_number))
         from pandas import read_csv as _csv
         self.skip += self.group_number * self.max_rows
         data = {}
@@ -65,7 +66,7 @@ class DataLoader:
         return
 
     
-    def _getLonLatPairs(_df):
+    def _getLonLatPairs(self, _df):
         """
         _getLonLatPairs(_df) takes a dataframe of values
         and returns the lon and lat columns.
