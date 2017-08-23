@@ -48,7 +48,7 @@ class DataLoader:
         Smart Shores project.
         Each time it is called, it loads the next batch of point cloud data.
         """
-        print('Loading group {}'.format(self.group_number))
+        print('Loading group {}...'.format(self.group_number), end='')
         from pandas import read_csv as _csv
         self.skip += self.group_number * self.max_rows
         data = {}
@@ -63,6 +63,7 @@ class DataLoader:
                 print('\rrows read: {}'.format(self.skip), end='')
         self.data = data
         self.group_number += 1
+        print('done!')
         return
 
     
@@ -92,7 +93,7 @@ class DataLoader:
         return an array or dict of arrays whose rows contain 
         unique pairs (lon, lat). 
         """
-        pairs = {k: np.unique(_getLonLatPairs(v), axis=0)
+        pairs = {k: np.unique(self._getLonLatPairs(v), axis=0)
                  for k, v in self.data.items()}
         if concat:
             pairs = np.vstack(pairs.values())
