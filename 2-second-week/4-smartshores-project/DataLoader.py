@@ -125,7 +125,7 @@ class DataLoader:
         """
         rgb = {k: self._getRgbArray(k) for k in self.data.keys()}
         if concat:
-            rgb = np.vstack(_rgb.values())
+            rgb = np.vstack(rgb.values())
         return rgb
 
 
