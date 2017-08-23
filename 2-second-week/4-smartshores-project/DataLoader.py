@@ -27,7 +27,15 @@ class DataLoader:
         self.nrows = kwargs.get('nrows', int(5 * 1e5))
         self.skip = kwargs.get('skip', 0)
         self.verbose = kwargs.get('verbose', False)
-        self.fp = kwargs.get('filepath', None)
+        self.fileName = None
+        self.read_shuffled = kwargs.get('read_shuffled', True)
+        if self.read_shuffled:
+            self.fileName = 'davis-bay-10Mshuf.txt'
+        else:
+            self.fileName = 'davis-bay.txt'
+        self.readDir = kwargs.get('readDir',
+                                  '/home/asberk/data/4-Vadeboncoeur/')
+        self.fp = self.readDir + self.fileName
         print('Counting total rows...', end='')
         self._total_rows()
         print(self.TOTAL_ROWS)
@@ -63,6 +71,8 @@ class DataLoader:
                 print('\rrows read: {}'.format(self.skip), end='')
         self.data = data
         self.group_number += 1
+        self.lonlat = None
+        self.lonlat_unique = None
         print('done!')
         return
 
@@ -139,3 +149,55 @@ class DataLoader:
         rgb = self.getRgbArray() / 255
         scaler = StandardScaler()
         return scaler.fit_transform(rgb)
+
+
+    def nn(self, n_neighbours=10, nbrRadius=None, n_jobs=-1):
+        from sklearn.neighbors import NearestNeighbors
+        if self.nbrRadius is None:
+            self.nbrRadius = 1e-5
+        if nbrRadius is None:
+            nbrRadius = self.nbrRadius
+        else:
+            self.nbrRadius = nbrRadius
+        self.neigh = NearestNeighbors(n_neighbors=n_neighbors,
+                                      radius=nbrRadius,
+                                      n_jobs=n_jobs)
+        if self.lonlat is None:
+            self.lonlat = self.getLonLatPairs()
+        self.neigh.fit(self.lonlat)
+        return
+
+
+    def saveKNeighboursBatch(self, batch_size, savedir='./'):
+        batch_number = 0
+        start_idx = batch_number * batch_size
+        end_idx = (batch_number + 1) * batch_size
+
+        if self.lonlat_unique is None:
+            self.lonlat_unique = self.uniqueLonLatPairs()
+            llu = self.lonlat_unique
+        
+        while end_idx < self.lonlat_unique.shape[0]-1:
+            fileName = savedir + 'radNeigh_lonlatUnique_{}_{}.npy'
+            fileName = fileName.format(self.group_number, batch_number)
+            queryArr = self.lonlat_unique[start_idx:end_idx]
+            self._saveKNeighbours(fileName, queryArr)
+            print('Batch {} complete.'.format(batch_number))
+            start_idx = end_idx
+            batch_number += 1
+            end_idx = (batch_number + 1) * BATCH_SIZE
+
+        queryArr = self.lonlat_unique[start_idx:]
+        fileName = 'radNeigh_lonlatUnique_{}_{}.npy'
+        fileName = fileName.format(self.group_number, batch_number)
+        self._saveKNeighbors(fileName, queryArr)
+        print('Batch {} complete.'.format(batch_number))
+        return
+    
+
+    def _saveKNeighbours(self, fileName, queryArr):
+        kneighBatch = self.neigh.kneighbors(queryArr,
+                                            return_distance=False)
+        np.save(fileName, kneighBatch)
+
+    
