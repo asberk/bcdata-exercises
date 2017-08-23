@@ -44,6 +44,10 @@ class DataLoader:
         print(self.TOTAL_ROWS)
         self.data = None
         self.group_number = 0
+        self.neigh = None
+        # ???
+        # self.lonlat = None
+        # self.lonlat_unique = None
         return
 
 
