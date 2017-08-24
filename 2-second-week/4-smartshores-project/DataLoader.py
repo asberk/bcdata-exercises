@@ -45,6 +45,7 @@ class DataLoader:
         self.data = None
         self.group_number = 0
         self.neigh = None
+        self._nbrRadius = None
         # ???
         # self.lonlat = None
         # self.lonlat_unique = None
@@ -165,12 +166,12 @@ class DataLoader:
 
     def nn(self, n_neighbours=10, nbrRadius=None, n_jobs=-1):
         from sklearn.neighbors import NearestNeighbors
-        if self.nbrRadius is None:
-            self.nbrRadius = 1e-5
+        if self._nbrRadius is None:
+            self._nbrRadius = 1e-5
         if nbrRadius is None:
-            nbrRadius = self.nbrRadius
+            nbrRadius = self._nbrRadius
         else:
-            self.nbrRadius = nbrRadius
+            self._nbrRadius = nbrRadius
         self.neigh = NearestNeighbors(n_neighbors=n_neighbors,
                                       radius=nbrRadius,
                                       n_jobs=n_jobs)

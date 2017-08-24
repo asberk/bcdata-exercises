@@ -1,0 +1,24 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+#Read data as dataframe
+df = pd.read_csv("/home/joshscurll/data/3-Simon/promoterDHS_distalDHS_pairs.csv")
+
+from Bio import SeqIO
+
+# Define a function to convert a chromosome string to a genomic sequence
+def chrom2seq(chrom):
+    """Convert chromosome string "chrom" to a genomic sequence"""
+
+    return list(SeqIO.parse(
+        "/home/joshscurll/data/3-Simon/hg38.analysisSet.chroms/%s.fa" % chrom, "fasta"))[0].seq.upper()
+
+# list of chromosomes
+CHROMS = ["chr1", "chr10", "chr11", "chr12", "chr13", "chr14", "chr15", "chr16", "chr17", 
+          "chr18", "chr19", "chr2", "chr20", "chr21", "chr22", "chr3", "chr4", "chr5", "chr6", 
+          "chr7", "chr8", "chr9", "chrM", "chrX", "chrY"]
+
+# Make dictionary
+CHROM2SEQ = dict(zip(CHROMS,[chrom2seq(chrom) for chrom in CHROMS]))
