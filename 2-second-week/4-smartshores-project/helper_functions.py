@@ -252,4 +252,130 @@ def hist3d(arr, **kwargs):
     plt.colorbar(im);
     return
 
-    
+
+
+# # # # # # #                                          # # # # # # # 
+# #                                                              # #
+#     This is the good stuff that's used in the final notebook     #
+# #                                                              # #
+# # # # # # #                                          # # # # # # #
+
+def kneigh(datav, n_neighbors=10, radius=1e-5):
+    """
+    kneigh : 
+    returns an array of the n_neighbours-many nearest neighbours 
+    for each row of datav (obtained by fitting a nearest neighbours
+    model to the rows of datav).
+
+    Input
+    datav : dataframe.values (e.g. df.values[:, :2].shape = (500000, 2))
+            where columns are (lon, lat)
+    defaults:  n_clusters = 10 and radius = 1e-5 (~1 m)
+    """
+    from sklearn.neighbors import NearestNeighbors
+    neigh = NearestNeighbors(n_neighbors=n_neighbors, radius=radius)
+    print('fitting nearest neighbours...', end='')
+    neigh.fit(datav)
+    print('done.')
+    print('getting k neighbors for each point...', end='')
+    kneigh_dist, kneigh_ind = neigh.kneighbors(datav)
+    print('done')
+    return kneigh_dist, kneigh_ind
+
+def pointFeatures(d, ind, j, dist=None):
+    """
+    pointFeatures(d, ind, dist, j, useSampleWeights=True)
+
+    Input
+    d : scaled data (e.g. many rows of (z,r,g,b) tuples). 
+    ind : an array where each row j corresponds to the jth 
+          (z,r,g,b) tuple of data_s, where each element k in
+          the jth row corresponds to the kth row of d that 
+          is a neighbor of j.
+    dist : either None, or an array of size d.shape[0] * n_neighbors
+           containing the distances from point j to each of its 
+           neighbours k
+    j : the row j of d for which to compute the features
+    """
+    ftr = d[ind[j,:],:] 
+    if dist is not None:
+        ftr = ftr / (np.c_[dist[j,:]]+.1)
+    return ftr.ravel()
+
+def generatePointFeatures(datav, n_neighbors=10, radius=1e-5):
+    """
+    generatePointFeatures
+
+    Input
+    datav = df.values where df.values.shape = (500000, 6)
+            where columns are (lon, lat, z, r, g, b)
+    """
+    # compute the knns and associated distances
+    kneigh_dist, kneigh_ind = kneigh(datav[:, :2], n_neighbors, radius)
+
+    # Scale the (z,r,g,b) tuples
+    print('scaling feature data...', end='')
+    from sklearn.preprocessing import StandardScaler
+    scaler = StandardScaler()
+    data_s = scaler.fit_transform(datav[:, 2:])
+    print('done.')
+
+    # get the point features for each point
+    print('fetching point features...', end='')
+    # # # Important Note: # # #
+    # we're not going to include kneigh_dist in the pointFeatures computation
+    # because I'm not convinced it makese sense in this context. If we had 
+    # used something like an adjacency sub-matrix, then maybe scaling by 
+    # sample weights would make more sense. But this possibility remains 
+    # open; cf. the if statement in pointFeatures(...).
+    ptFtrs = [pointFeatures(data_s, kneigh_ind, j) 
+              for j in range(kneigh_ind.shape[0])]
+    ptFtrs = np.array(ptFtrs)
+    print('done.')
+    return ptFtrs
+
+def miniBatchKMeans(X, n_clusters=20, batch_size=50000):
+    """
+    miniBatchKMeans
+    returns trained minibatch k means on the data X
+    """
+    from sklearn.cluster import MiniBatchKMeans
+    km = MiniBatchKMeans(n_clusters=n_clusters)
+    batch = 0
+    start_idx = batch * batch_size
+    end_idx = (batch+1) * batch_size
+
+    while end_idx < X.shape[0]:
+        km.partial_fit(X[start_idx:end_idx, :])
+        batch += 1
+        start_idx = end_idx
+        end_idx = (batch + 1) * batch_size
+
+    km.partial_fit(X[start_idx:, :])
+    return km
+
+def getClusterMembership(km, X):
+    """
+    Return which cluster each point belongs to.
+    km is a fit k-means object and X is the data where cluster
+    membership is to be determined
+    """
+    km_ = km.transform(X)
+    clusterMembership = np.argmin(km_, axis=-1)
+    return clusterMembership
+
+def makeScatterPlot(datav, clusterMembership, nClusters=None, cmap=None, **kwargs):
+    """
+    pretty plots the data, coloured by cluster membership
+    """
+    if nClusters is None:
+        nClusters = np.unique(clusterMembership).size
+    if cmap is None:
+        cmap = plt.cm.gist_earth
+    figsize = kwargs.get('figsize', (20,15))
+    s = kwargs.get('s', 1)
+    cb = kwargs.get('cb', True)
+    nColours = cmap(np.arange(256))[np.linspace(0, 255, num=nClusters, dtype=np.int)]
+    f, ax = plt.subplots(1,1,figsize=figsize)
+    im = plt.scatter(datav[:,0], datav[:,1], c=nColours[clusterMembership], s=s)
+    return
