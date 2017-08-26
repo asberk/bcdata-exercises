@@ -297,10 +297,10 @@ def pointFeatures(d, ind, j, dist=None):
            neighbours k
     j : the row j of d for which to compute the features
     """
-    ftr = d[ind[j,:],:] 
+    ftr = d[ind[j,:],:].ravel()
     if dist is not None:
-        ftr = ftr / (np.c_[dist[j,:]]+.1)
-    return ftr.ravel()
+        ftr = np.concatenate((ftr, dist[j,:]))
+    return ftr
 
 def generatePointFeatures(datav, n_neighbors=10, radius=1e-5):
     """
@@ -328,7 +328,7 @@ def generatePointFeatures(datav, n_neighbors=10, radius=1e-5):
     # used something like an adjacency sub-matrix, then maybe scaling by 
     # sample weights would make more sense. But this possibility remains 
     # open; cf. the if statement in pointFeatures(...).
-    ptFtrs = [pointFeatures(data_s, kneigh_ind, j) 
+    ptFtrs = [pointFeatures(data_s, kneigh_ind, j, kneigh_dist) 
               for j in range(kneigh_ind.shape[0])]
     ptFtrs = np.array(ptFtrs)
     print('done.')

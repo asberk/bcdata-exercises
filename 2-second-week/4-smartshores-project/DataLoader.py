@@ -34,7 +34,7 @@ class DataLoader:
         else:
             self.fileName = 'davis-bay.txt'
         self.readDir = kwargs.get('readDir',
-                                  '/home/asberk/data/4-Vadeboncoeur/')
+                                  './data/')
         self.fp = self.readDir + self.fileName
         self.include_angles = kwargs.get('include_angles', False)
         if not self.include_angles:
